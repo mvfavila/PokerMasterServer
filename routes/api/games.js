@@ -17,7 +17,7 @@ router.post('/games', auth.required, function(req, res, next){
 
     Game.find({ userId: token.id, active: true }).then(function(game){
         if(Array.isArray(game) && game.length > 0){
-            return res.status(403).send({ error: "Game already in progress" });
+            return res.json({game: game[0].toJSON()});
         }
         else{
             // create new game
@@ -70,6 +70,23 @@ router.get('/games', auth.required, function(req, res, next){
       });
   
       return res.json({ games: gamesJson });
+    }).catch(next);
+});
+
+/*
+ * PATCH
+ * Update game
+ * Expected errors:
+ * 403: The user already has an active game
+*/
+router.patch('/game', auth.required, function(req, res, next){
+    
+    // get data from user.token
+    var token = decodeFromReq(req);
+
+    Game.find({ userId: token.id, active: true }).then(function(game){
+        game = game[0];
+
     }).catch(next);
 });
 
