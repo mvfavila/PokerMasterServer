@@ -59,8 +59,7 @@ router.get('/game', auth.required, function(req, res, next){
  * 204: No active game found
 */
 router.get('/games', auth.required, function(req, res, next){
-    var token = decodeFromReq(req);
-    
+
     Game.find().then(function(games){
       if(!games){ return res.status(204).send({ error: "No game found" }); }
 
@@ -71,6 +70,7 @@ router.get('/games', auth.required, function(req, res, next){
   
       return res.json({ games: gamesJson });
     }).catch(next);
+    
 });
 
 /*
@@ -81,6 +81,27 @@ router.get('/games', auth.required, function(req, res, next){
 */
 router.patch('/game', auth.required, function(req, res, next){
     
+    if(game.length == 0) { return res.status(204).send({ error: "No game found" }); }
+
+    game = game[0];
+
+    if(req.body.player){
+        if(req.body.player.gameId && req.body.player.gameId === game._id){
+            return res.status(400).send({ error: "This player does not belong to the active game" });
+        }
+        if(Player.find({ playerId: req.body.player.playerId, gameId: game._id }).then((player) =>{
+            return res.status(400).send({ error: "This player is already in this game" });
+        }));
+        game.players.push(req.body.player);
+    }
+    else{
+        return res.status(400).send({ error: "Bad request" });
+    }
+
+    game.save().then(function(){
+        return res.json({game: game.toJSON()});
+    }).catch(next);
+
     // get data from user.token
     var token = decodeFromReq(req);
 
@@ -88,6 +109,16 @@ router.patch('/game', auth.required, function(req, res, next){
         game = game[0];
 
     }).catch(next);
+});
+
+/*
+ * DELETE
+ * DELETE all games
+*/
+router.delete('/game/deleteall', auth.optional, function(req, res, next){
+    Game.deleteMany({})
+    .then((res) => {})
+    .catch(next);
 });
 
 function decodeFromReq(req) {

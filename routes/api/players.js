@@ -26,12 +26,11 @@ router.post('/players', auth.required, function(req, res, next){
             //if(game.length > 1)
             //    logError('Multiple active games for user: ' + token.id);
 
-            if(!req.body.player.username){
+            if(!req.body.player.username)
                 return res.status(422).json({errors: {username: "can't be blank"}});
-            }
-            if(req.body.player.username.length < 2){
+                
+            if(req.body.player.username.length < 2)
                 return res.status(422).json({errors: {username: "needs more than 2 characteres"}});
-            }
 
             var player = new Player();
             player.gameId = game[0].id;            
@@ -39,10 +38,10 @@ router.post('/players', auth.required, function(req, res, next){
             player.buyIns = req.body.player.buyIns || [];
             player.active = true;
             
-            //TODO: check how to link player to 3rd user (not the user who added the player)
+            // todo: check how to link player to 3rd user (not the user who added the player)
 
             player.save().then(function(){
-                return res.json({player: player.toJSON()});
+                return res.json({ player: player.toJSON() });
             }).catch(next);
         }
     }).catch(next);
@@ -78,5 +77,15 @@ function decodeFromReq(req) {
     var token = req.headers.authorization.split(' ')[1];
     return jwt.decode(token);
 }
+
+/*
+ * DELETE
+ * DELETE all players
+*/
+router.delete('/players/deleteall', auth.optional, function(req, res, next){
+    Player.deleteMany({})
+    .then((res) => {})
+    .catch(next);
+});
 
 module.exports = router;
